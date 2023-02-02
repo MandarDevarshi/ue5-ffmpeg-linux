@@ -1,11 +1,12 @@
 # (Linux Platform Only) Live Streaming / Video Capture (with ffmpeg) for UnrealEngine 5
 
-> Read the original README upstream or translation of it on this [gist](https://gist.github.com/MandarDevarshi/6f5677459632227361e3ce23a95490ba)
+> Read the original README upstream or translation of it at this [gist](https://gist.github.com/MandarDevarshi/6f5677459632227361e3ce23a95490ba)
 
-- ffmpeg 4.0.6 "Wu" [ffmpeg Old Releases Download](https://ffmpeg.org/olddownload.html))
-- NVIDIA Driver v 525
-- Unreal Engine v 5.1.0
-- As `h264_nvenc` encoder is being used for remaking ffmpeg [Read](https://docs.nvidia.com/video-technologies/video-codec-sdk/ffmpeg-with-nvidia-gpu/)
+- ffmpeg 4.0.6 "Wu" [Download old ffmpeg releases here](https://ffmpeg.org/olddownload.html)
+- NVIDIA Driver v 525 (blacklist nouveau before installing)
+- Unreal Engine v 5.1.0 (download and extract)
+- Ubuntu 20.04 (22.xx will require downgrading of `libssl3.x -> libssl1.x`)
+- As `h264_nvenc` encoder is being used for remaking ffmpeg. [Read more](https://docs.nvidia.com/video-technologies/video-codec-sdk/ffmpeg-with-nvidia-gpu/)
 - Configure flags used for ffmpeg were following
   
 	```bash
@@ -29,9 +30,19 @@
 	--extra-ldflags=-L/lib/x86_64/
 	```
 
-- Fix Warning once open in Unreal Editor: Actor needs a resave. Right click on WorldDataLayer-1 and Save selected actor, same for others if required.
+- Navigate to `.uproject` file and `Open Copy`.
 
-- Fix path of the output file in the blueprint to match UNIX filesystem
+**Inside the Editor**
+
+- `Fix Warning` once open in Unreal Editor: Actor needs a resave. Right click on WorldDataLayer-1 and Save selected actor, same for others if required.
+
+- `Fix path` of the output file in the blueprint to match UNIX filesystem
+
+- Change lights and actors properties -> `Rendering Properties` -> `Actor Hidden in the Game` True
+
+- Save, Open Blueprint, Compile, Save and Play
+
+- rtmp://127.0.0.1:1935/live
 
 ## Helper Note
 
@@ -45,3 +56,6 @@ As not all hardware accelerators are required and some features are internal to 
 --toolchain=msvc --arch=x86 --disable-static --enable-shared --enable-libmp3lame --enable-gpl --enable-w32threads --enable-libvpx --disable-yasm --enable-nvenc --enable-cuda --enable-cuvid --enable-openal --enable-d3d11va --extra-cflags=-I../lame-3.99.5/include --extra-cflags=-I../SDL2-2.0.8/include --extra-cflags='-IH:/Pixelarama/MainCode/ExternalLibs/OpenCL/Nvidia/include' --extra-cflags=-I../libvpx --extra-cflags='-IC:/PROGRA~1/NVIDIA~2/CUDA/v9.1/include' --extra-cflags='-IH:/Pixelarama/MainCode/ExternalLibs/openal/include' --extra-cflags=-I../zlib-1.2.11/build/install/include --extra-cflags=-I../nv-codec-headers/include --extra-ldflags='-LIBPATH:H:/Pixelarama/MainCode/ExternalLibs/OpenCL/Nvidia/lib' --extra-ldflags='-LIBPATH:../lame-3.99.5/output/Release/win32' --extra-ldflags='-LIBPATH:C:/PROGRA~1/NVIDIA~2/CUDA/v9.1/lib/win32' --extra-ldflags='-LIBPATH:H:/Pixelarama/MainCode/ExternalLibs/openal/lib' --extra-ldflags='-LIBPATH:../zlib-1.2.11/build/install/lib' --extra-ldflags='-LIBPATH:../libvpx/build32/Win32/Release' --extra-ldflags='-LIBPATH:../SDL2-2.0.8/lib/x86'
 ```
 
+## TODO
+
+- [ ] Reduce size of libavcodec by removing unwanted encoders, decoders etc.
