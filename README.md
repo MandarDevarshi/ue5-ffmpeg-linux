@@ -38,8 +38,6 @@
 
 - `Fix path` of the output file in the blueprint to match UNIX filesystem
 
-- Change lights and actors properties -> `Rendering Properties` -> `Actor Hidden in the Game` True
-
 - Save, Open Blueprint, Compile, Save and Play
 
 - rtmp://127.0.0.1:1935/live
