@@ -15,7 +15,7 @@ public:
 
 
 private:
-	void* LoadLibrary(const  FString& name, const FString& version);
+	void* LoadLibrary(const  FString& name);
 	void* AVUtilLibrary;
 	void* SWResampleLibrary;
 	void* AVCodecLibrary;

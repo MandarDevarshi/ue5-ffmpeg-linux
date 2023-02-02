@@ -8,7 +8,8 @@ public class UE5_ffmpegTarget : TargetRules
 	public UE5_ffmpegTarget( TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
-		DefaultBuildSettings = BuildSettingsVersion.V2;
+		DefaultBuildSettings = BuildSettingsVersion.Latest;
+		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_1;		
 		ExtraModuleNames.AddRange( new string[] { "UE5_ffmpeg" } );
 	}
 }

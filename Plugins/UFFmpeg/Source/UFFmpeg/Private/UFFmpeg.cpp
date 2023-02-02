@@ -1,8 +1,10 @@
 ﻿// Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
-#include "Uffmpeg.h"
+#include "UFFmpeg.h"
+#include "Unix/UnixPlatformProcess.h"
 #include "Interfaces/IPluginManager.h"
 #include "Core.h"
+
 extern  "C" {
 #include "libavformat/avformat.h"
 }
@@ -13,17 +15,20 @@ void FUFFmpegModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
 
-	AVUtilLibrary = LoadLibrary(TEXT("avutil"), TEXT("56"));
-	SWResampleLibrary = LoadLibrary(TEXT("swresample"), TEXT("3"));
-	AVCodecLibrary = LoadLibrary(TEXT("avcodec"), TEXT("58"));
-	AVFormatLibrary = LoadLibrary(TEXT("avformat"), TEXT("58"));
-	SWScaleLibrary = LoadLibrary(TEXT("swscale"), TEXT("5"));
-	PostProcLibrary = LoadLibrary(TEXT("postproc"), TEXT("55"));
-	AVFilterLibrary = LoadLibrary(TEXT("avfilter"), TEXT("7"));
-	AVDeviceLibrary = LoadLibrary(TEXT("avdevice"), TEXT("58"));
+	AVUtilLibrary = LoadLibrary(TEXT("avutil"));
+	SWResampleLibrary = LoadLibrary(TEXT("swresample"));
+	AVCodecLibrary = LoadLibrary(TEXT("avcodec"));
+	AVFormatLibrary = LoadLibrary(TEXT("avformat"));
+	SWScaleLibrary = LoadLibrary(TEXT("swscale"));
+	PostProcLibrary = LoadLibrary(TEXT("postproc"));
+	AVFilterLibrary = LoadLibrary(TEXT("avfilter"));
+	AVDeviceLibrary = LoadLibrary(TEXT("avdevice"));
 	Initialized = true;
 }
 
+// TODO:
+// Find equivalent of FreeDllHandle for Linux Platform
+// Action: The class for it was different
 void FUFFmpegModule::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
@@ -32,44 +37,41 @@ void FUFFmpegModule::ShutdownModule()
 	{
 		return;
 	}
-	if (AVDeviceLibrary) FPlatformProcess::FreeDllHandle(AVDeviceLibrary);
-	if (AVFilterLibrary) FPlatformProcess::FreeDllHandle(AVFilterLibrary);
-	if (PostProcLibrary) FPlatformProcess::FreeDllHandle(PostProcLibrary);
-	if (SWScaleLibrary) FPlatformProcess::FreeDllHandle(SWScaleLibrary);
-	if (AVFormatLibrary) FPlatformProcess::FreeDllHandle(AVFormatLibrary);
-	if (AVCodecLibrary) FPlatformProcess::FreeDllHandle(AVCodecLibrary);
-	if (SWResampleLibrary) FPlatformProcess::FreeDllHandle(SWResampleLibrary);
-	if (AVUtilLibrary) FPlatformProcess::FreeDllHandle(AVUtilLibrary);
+	// TODO:
+	// Change this to a relevant function
+	// Action: The class was changed to be for Unix Platform, the function is the same
+	if (AVDeviceLibrary) FUnixPlatformProcess::FreeDllHandle(AVDeviceLibrary);
+	if (AVFilterLibrary) FUnixPlatformProcess::FreeDllHandle(AVFilterLibrary);
+	if (PostProcLibrary) FUnixPlatformProcess::FreeDllHandle(PostProcLibrary);
+	if (SWScaleLibrary) FUnixPlatformProcess::FreeDllHandle(SWScaleLibrary);
+	if (AVFormatLibrary) FUnixPlatformProcess::FreeDllHandle(AVFormatLibrary);
+	if (AVCodecLibrary) FUnixPlatformProcess::FreeDllHandle(AVCodecLibrary);
+	if (SWResampleLibrary) FUnixPlatformProcess::FreeDllHandle(SWResampleLibrary);
+	if (AVUtilLibrary) FUnixPlatformProcess::FreeDllHandle(AVUtilLibrary);
 
 	Initialized = false;
 }
 
-void* FUFFmpegModule::LoadLibrary(const FString& name, const FString& version)
+void* FUFFmpegModule::LoadLibrary(const FString& name)
 {
 	FString BaseDir = IPluginManager::Get().FindPlugin("Uffmpeg")->GetBaseDir();
-
 	FString LibDir;
 	FString extension;
-	FString prefix;
-	FString separator;
-#if PLATFORM_MAC
-	LibDir = FPaths::Combine(*BaseDir, TEXT("ThirdParty/ffmpeg/lib/osx"));
-	extension = TEXT(".dylib");
-	prefix = "lib";
-	separator = ".";
-#elif PLATFORM_WINDOWS
-	extension = TEXT(".dll");
-	prefix = "";
-	separator = "-";
-#if PLATFORM_64BITS
-	LibDir = FPaths::Combine(*BaseDir, TEXT("ThirdParty/ffmpeg/bin/vs/x64"));
-#else
-	LibDir = FPaths::Combine(*BaseDir, TEXT("ThirdParty/ffmpeg/bin/vs/win32"));
-#endif
-#endif
+	// Action: Changing it to be platform specific
+	#if PLATFORM_UNIX
+		extension = TEXT(".so");
+		LibDir = FPaths::Combine(*BaseDir, TEXT("ThirdParty/ffmpeg/linux/"));
+	#else
+		// TODO: Add an error message and return
+		// Throw Error
+		// Handle Library Directory empty
+		return nullptr;
+	#endif
+
 	if (!LibDir.IsEmpty()) {
-		FString LibraryPath = FPaths::Combine(*LibDir, prefix + name + separator + version + extension);
-		return FPlatformProcess::GetDllHandle(*LibraryPath);
+		FString LibraryPath = FPaths::Combine(*LibDir, name + extension);
+		// TODO: Fix this
+		return FUnixPlatformProcess::GetDllHandle(*LibraryPath);
 	}
 	return nullptr;
 }

@@ -1,4 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
+#include "FFmpegDirector.h"
+#include "EncoderThread.h"
+#include "EncodeData.h"
 
 #include "Engine/GameViewportClient.h"
 #include "Slate/SceneViewport.h"
@@ -14,9 +17,6 @@
 #include "Misc/CoreDelegates.h"
 #include "GameDelegates.h"
 
-#include "FFmpegDirector.h"
-#include "EncoderThread.h"
-#include "EncodeData.h"
 
 UFFmpegDirector::UFFmpegDirector() :
 	outputs(nullptr),
@@ -377,7 +377,7 @@ void UFFmpegDirector::Create_Video_Encoder(bool is_use_NGPU, const char* out_fil
 
 void UFFmpegDirector::Video_Frame_YUV_From_BGR(uint8_t *rgb)
 {
-	const int in_linesize[1] = { 3 * width };
+	const int in_linesize[1] = {static_cast<int>(3 * width)};
 	sws_scale(sws_context, (const uint8_t * const *)&rgb, in_linesize, 0,
 		height, video_frame->data, video_frame->linesize);
 	video_frame->width = out_width;

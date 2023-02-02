@@ -20,48 +20,30 @@ public class UFFmpeg : ModuleRules
     public UFFmpeg(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+        bIgnoreUnresolvedSymbols = true;
 
-        if (Target.Platform == UnrealTargetPlatform.Win64)
+        if (Target.Platform == UnrealTargetPlatform.Linux)
         {
-            string PlatformString = "x64";
-            string LibrariesPath = Path.Combine(Path.Combine(Path.Combine(ThirdPartyPath, "ffmpeg", "lib"), "vs"), PlatformString);    
+            // PublicIncludePaths.AddRange(new string[] { Path.Combine(ModulePath, "../../ThirdParty/ffmpeg/include")});
+            PublicAdditionalLibraries.Add(Path.Combine(ModulePath, "../../ThirdParty/ffmpeg/linux/libavcodec.a"));
+            PublicAdditionalLibraries.Add(Path.Combine(ModulePath, "../../ThirdParty/ffmpeg/linux/libavdevice.a"));
+            PublicAdditionalLibraries.Add(Path.Combine(ModulePath, "../../ThirdParty/ffmpeg/linux/libavfilter.a"));
+            PublicAdditionalLibraries.Add(Path.Combine(ModulePath, "../../ThirdParty/ffmpeg/linux/libavformat.a"));
+            PublicAdditionalLibraries.Add(Path.Combine(ModulePath, "../../ThirdParty/ffmpeg/linux/libavutil.a"));
+            PublicAdditionalLibraries.Add(Path.Combine(ModulePath, "../../ThirdParty/ffmpeg/linux/libswscale.a"));
+            PublicAdditionalLibraries.Add(Path.Combine(ModulePath, "../../ThirdParty/ffmpeg/linux/libswresample.a"));
 
-            PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "avcodec.lib"));
-            PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "avdevice.lib"));
-            PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "avfilter.lib"));
-            PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "avformat.lib"));
-            PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "avutil.lib"));
-            PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "swresample.lib"));
-            PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "swscale.lib"));
+            RuntimeDependencies.Add(Path.Combine(ModulePath, "../../ThirdParty/ffmpeg/linux/libavcodec.so"));
+            RuntimeDependencies.Add(Path.Combine(ModulePath, "../../ThirdParty/ffmpeg/linux/libavdevice.so"));
+            RuntimeDependencies.Add(Path.Combine(ModulePath, "../../ThirdParty/ffmpeg/linux/libavfilter.so"));
+            RuntimeDependencies.Add(Path.Combine(ModulePath, "../../ThirdParty/ffmpeg/linux/libavformat.so"));
+            RuntimeDependencies.Add(Path.Combine(ModulePath, "../../ThirdParty/ffmpeg/linux/libavutil.so"));
+            RuntimeDependencies.Add(Path.Combine(ModulePath, "../../ThirdParty/ffmpeg/linux/libswscale.so"));
+            RuntimeDependencies.Add(Path.Combine(ModulePath, "../../ThirdParty/ffmpeg/linux/libswresample.so"));
+        }      
 
-            string[] dlls = { "avcodec-58.dll", "avdevice-58.dll", "avfilter-7.dll", "avformat-58.dll", "avutil-56.dll", "swresample-3.dll", "swscale-5.dll", "postproc-55.dll" };
-
-            string BinariesPath = Path.Combine(Path.Combine(Path.Combine(ThirdPartyPath, "ffmpeg", "bin"), "vs"), PlatformString);
-            System.Console.WriteLine("... LibrariesPath -> " + BinariesPath);
-            foreach (string dll in dlls)
-            {
-                PublicDelayLoadDLLs.Add(dll);
-                RuntimeDependencies.Add(Path.Combine(BinariesPath, dll), StagedFileType.NonUFS);
-            }
-        }
-        else if (Target.Platform == UnrealTargetPlatform.Mac)
-        {
-            string LibrariesPath = Path.Combine(Path.Combine(ThirdPartyPath, "ffmpeg", "lib"), "osx");
-
-            System.Console.WriteLine("... LibrariesPath -> " + LibrariesPath);
-
-            string[] libs = { "libavcodec.58.dylib", "libavdevice.58.dylib", "libavfilter.7.dylib", "libavformat.58.dylib", "libavutil.56.dylib", "libswresample.3.dylib", "libswscale.5.dylib", "libpostproc.55.dylib" };
-            foreach (string lib in libs)
-            {
-                PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, lib));
-                RuntimeDependencies.Add(Path.Combine(LibrariesPath, lib), StagedFileType.NonUFS);
-            }
-
-        }
-        // Include path
         PublicIncludePaths.Add(Path.Combine(ThirdPartyPath, "ffmpeg", "include"));
         PublicIncludePaths.Add(Path.Combine(Directory.GetCurrentDirectory(), "Runtime","AudioMixer","Private"));
-
 
         PublicDependencyModuleNames.AddRange(
             new string[]
