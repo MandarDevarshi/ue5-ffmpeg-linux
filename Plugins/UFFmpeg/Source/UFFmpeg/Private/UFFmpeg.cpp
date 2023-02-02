@@ -15,14 +15,14 @@ void FUFFmpegModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
 
-	AVUtilLibrary = LoadLibrary(TEXT("avutil"));
-	SWResampleLibrary = LoadLibrary(TEXT("swresample"));
-	AVCodecLibrary = LoadLibrary(TEXT("avcodec"));
-	AVFormatLibrary = LoadLibrary(TEXT("avformat"));
-	SWScaleLibrary = LoadLibrary(TEXT("swscale"));
-	PostProcLibrary = LoadLibrary(TEXT("postproc"));
-	AVFilterLibrary = LoadLibrary(TEXT("avfilter"));
-	AVDeviceLibrary = LoadLibrary(TEXT("avdevice"));
+	AVUtilLibrary = LoadLibrary(TEXT("libavutil"));
+	SWResampleLibrary = LoadLibrary(TEXT("libswresample"));
+	AVCodecLibrary = LoadLibrary(TEXT("libavcodec"));
+	AVFormatLibrary = LoadLibrary(TEXT("libavformat"));
+	SWScaleLibrary = LoadLibrary(TEXT("libswscale"));
+	PostProcLibrary = LoadLibrary(TEXT("libpostproc"));
+	AVFilterLibrary = LoadLibrary(TEXT("libavfilter"));
+	AVDeviceLibrary = LoadLibrary(TEXT("libavdevice"));
 	Initialized = true;
 }
 

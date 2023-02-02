@@ -5,6 +5,7 @@
 - ffmpeg 4.0.6 "Wu" [ffmpeg Old Releases Download](https://ffmpeg.org/olddownload.html))
 - NVIDIA Driver v 525
 - Unreal Engine v 5.1.0
+- As `h264_nvenc` encoder is being used for remaking ffmpeg [Read](https://docs.nvidia.com/video-technologies/video-codec-sdk/ffmpeg-with-nvidia-gpu/)
 - Configure flags used for ffmpeg were following
   
 	```bash
@@ -29,6 +30,8 @@
 	```
 
 - Fix Warning once open in Unreal Editor: Actor needs a resave. Right click on WorldDataLayer-1 and Save selected actor, same for others if required.
+
+- Fix path of the output file in the blueprint to match UNIX filesystem
 
 ## Helper Note
 
