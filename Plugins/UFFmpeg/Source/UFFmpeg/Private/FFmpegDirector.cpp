@@ -279,7 +279,7 @@ void UFFmpegDirector::Create_Video_Encoder(bool is_use_NGPU, const char* out_fil
 
 	if (is_use_NGPU)
 	{
-		encoder_codec = avcodec_find_encoder_by_name("nvenc_h264");
+		encoder_codec = avcodec_find_encoder_by_name("h264_nvenc");
 	}
 	else
 	{
