@@ -28,6 +28,8 @@
 	--extra-ldflags=-L/lib/x86_64/
 	```
 
+- Fix Warning once open in Unreal Editor: Actor needs a resave. Right click on WorldDataLayer-1 and Save selected actor, same for others if required.
+
 ## Helper Note
 
 The original author had most probably used the following flags, they were extracted from the dynamic libraries for Windows Platform. Along with the `version` used as `ffmpeg 4.0`.
