@@ -219,7 +219,8 @@ void UFFmpegDirector::AddTickFunction()
 void UFFmpegDirector::GetScreenVideoData()
 {
 	FRHICommandListImmediate& list = GRHICommandList.GetImmediateCommandList();
-	uint8* TextureData = (uint8*)list.LockTexture2D(GameTexture->GetTexture2D(), 0, EResourceLockMode::RLM_ReadOnly, LolStride, false);
+	// Action: From RLM_ReadOnly -> RLM_WriteOnly due to assertion failure in VulkanRHI
+	uint8* TextureData = (uint8*)list.LockTexture2D(GameTexture->GetTexture2D(), 0, EResourceLockMode::RLM_WriteOnly, LolStride, false);
 	if(Runnable)
 		Runnable->InsertVideo(TextureData);
 	list.UnlockTexture2D(GameTexture, 0, false);
