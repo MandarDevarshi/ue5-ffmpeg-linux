@@ -24,13 +24,13 @@ public:
 	virtual void Stop() override;  
 	virtual void Exit() override; 
 
-	void CreateQueue(int video_data_size, int auido_data_size, int video_data_num, int auido_data_num);
+	void CreateQueue(int video_data_size, int audio_data_size, int video_data_num, int audio_data_num);
 
 	EncodeDelegate& GetAudioProcessDelegate();
 	EncodeDelegate& GetAudioTimeProcessDelegate();
 
-	bool InsertVideo(uint8* Src);
-	bool InsertAudio(uint8* Src,uint8* time);
+	bool InsertVideo(uint8* src);
+	bool InsertAudio(uint8* src,uint8* time);
 
 	FCriticalSection VideoBufferMutex;
 	FCriticalSection AudioMutex;

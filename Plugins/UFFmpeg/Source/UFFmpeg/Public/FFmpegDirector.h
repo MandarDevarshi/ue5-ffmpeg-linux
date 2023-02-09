@@ -43,13 +43,13 @@ public:
 	UFFmpegDirector();
 	virtual ~UFFmpegDirector();
 	UFUNCTION(BlueprintCallable)
-	void Initialize_Director(UWorld* World, FString OutFileName, bool UseGPU,FString VideoFilter,int VideoFps, int VideoBitRate, float AudioDelay,float SoundVolume);
+	void Initialize_Director(UWorld* World, FString OutFileName, bool UseGPU, FString VideoFilter,int VideoFps, int VideoBitRate, float AudioDelay,float SoundVolume);
 	void Begin_Receive_AudioData(UWorld* world);
 	void Begin_Receive_VideoData();
 
-	void Encode_Video_Frame(uint8_t *rgb);
+	void Encode_Video_Frame(uint8_t* rgb);
 	void Encode_SetCurrentAudioTime(uint8_t* rgb);
-	void Encode_Audio_Frame(uint8_t *rgb);
+	void Encode_Audio_Frame(uint8_t* rgb);
 	void Encode_Finish();
 	
 	virtual void OnNewSubmixBuffer(const USoundSubmix* OwningSubmix, float* AudioData, int32 NumSamples, int32 NumChannels, const int32 SampleRate, double AudioClock) override;
@@ -62,9 +62,9 @@ public:
 	void DestoryDirector();
 	
 private:
-	void Create_Video_Encoder(bool is_use_NGPU, const char* out_file_name,int bit_rate);
+	void Create_Video_Encoder(bool UseGPU, const char* out_file_name,int bit_rate);
 	void Create_Audio_Encoder(const char* audioencoder_name);
-	void Video_Frame_YUV_From_BGR(uint8_t *rgb);
+	void Video_Frame_YUV_From_BGR(uint8_t* rgb);
 	void Create_Audio_Swr();
 	void GetScreenVideoData();
 
@@ -109,7 +109,7 @@ private:
 	int32_t video_index;
 	int32_t audio_index;
 
-	FEncoderThread * Runnable;
+	FEncoderThread* Runnable;
 	FRunnableThread* RunnableThread;
 
 	AVFormatContext* out_format_context;

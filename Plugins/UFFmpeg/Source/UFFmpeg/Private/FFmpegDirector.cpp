@@ -94,7 +94,7 @@ void UFFmpegDirector::EndWindowReader_StandardGame(void* i)
 void UFFmpegDirector::Begin_Receive_AudioData(UWorld* world)
 {
 	GameMode = world->WorldType;
-	
+
 	FAudioDeviceHandle AudioDeviceHandle = world->GetAudioDevice();
 
 	//AudioDevice = AudioDeviceHandle;
@@ -106,6 +106,7 @@ void UFFmpegDirector::Begin_Receive_AudioData(UWorld* world)
 
 void UFFmpegDirector::Initialize_Director(UWorld* World, FString OutFileName, bool UseGPU, FString VideoFilter, int VideoFps, int VideoBitRate, float AudioDelay, float SoundVolume)
 {
+	// TODO: Fix these
 	avfilter_register_all();
 	av_register_all();
 	avformat_network_init();
@@ -129,6 +130,7 @@ void UFFmpegDirector::Initialize_Director(UWorld* World, FString OutFileName, bo
 
 	FString Str_width;
 	FString Str_height;
+	// Rescaling
 	if (VideoFilter.Len() > 0)
 	{
 		VideoFilter.Split("=", &Scale, &Resolution);
@@ -143,9 +145,13 @@ void UFFmpegDirector::Initialize_Director(UWorld* World, FString OutFileName, bo
 	filter_descr.Append(FString::FromInt(out_height));
 	filter_descr.Append("[out]");
 
+	// Searches for substring and returns index
 	int IsUseRTMP = OutFileName.Find("rtmp");
+	// When rtmp is true
 	if (IsUseRTMP==0)
 	{
+		// Allocate and initialize output format context for rtmp in format flv
+		// https://ffmpeg.org/doxygen/4.0/avformat_8h.html#a6ddf3d982feb45fa5081420ee911f5d5
 		if (avformat_alloc_output_context2(&out_format_context, NULL, "flv", TCHAR_TO_ANSI(*OutFileName)) < 0)
 		{
 			check(false);
@@ -158,8 +164,9 @@ void UFFmpegDirector::Initialize_Director(UWorld* World, FString OutFileName, bo
 			check(false);
 		}
 	}
-	//create audio encoder
+	// Create audio resampler
 	Create_Audio_Swr();
+	// Create audio encoder
 	Create_Audio_Encoder("aac");
 
 	//create video encoder
@@ -169,7 +176,7 @@ void UFFmpegDirector::Initialize_Director(UWorld* World, FString OutFileName, bo
 	//create encode thread
 	CreateEncodeThread();
 
-	//bind delegate for get video data and audio data 
+	//bind delegate for get video data and audio data
 	Begin_Receive_VideoData();
 	Begin_Receive_AudioData(World);
 
@@ -191,7 +198,7 @@ void UFFmpegDirector::OnBackBufferReady_RenderThread(SWindow& SlateWindow, const
 		{
 			GameTexture = BackBuffer;
 			ticktime -= Video_Tick_Time;
-			GetScreenVideoData();		
+			GetScreenVideoData();
 		}
 	}
 }
@@ -206,7 +213,7 @@ void UFFmpegDirector::AddEndFunction()
 {
 	if(GameMode== EWorldType::Game)
 		FSlateApplication::Get().GetRenderer()->OnSlateWindowDestroyed().AddUObject(this, &UFFmpegDirector::EndWindowReader_StandardGame);
-		
+
 	if(GameMode == EWorldType::PIE)
 		FEditorDelegates::EndPIE.AddUObject(this, &UFFmpegDirector::EndWindowReader);
 }
@@ -236,24 +243,29 @@ void UFFmpegDirector::CreateEncodeThread()
 	RunnableThread = FRunnableThread::Create(Runnable, TEXT("EncoderThread"));
 }
 
+// Create audio encoder
 void UFFmpegDirector::Create_Audio_Encoder(const char* audioencoder_name)
 {
 	AVCodec* audioencoder_codec;
 	audioencoder_codec = avcodec_find_encoder_by_name(audioencoder_name);
+	// Add a new stream to a media file
 	out_audio_stream = avformat_new_stream(out_format_context, audioencoder_codec);
 	audio_index = out_audio_stream->index;
+	// Allocate an AVCodecContext and set its fields to default
 	audio_encoder_codec_context = avcodec_alloc_context3(audioencoder_codec);
 
 	if (!out_audio_stream)
 	{
 		check(false);
 	}
+	// Set AVCodecContext fields
 	audio_encoder_codec_context->codec_id = AV_CODEC_ID_AAC;
 	audio_encoder_codec_context->bit_rate = 120000;
 	audio_encoder_codec_context->codec_type = AVMEDIA_TYPE_AUDIO;
 	audio_encoder_codec_context->sample_rate = 48000;
 	audio_encoder_codec_context->sample_fmt = AV_SAMPLE_FMT_FLTP;
 	audio_encoder_codec_context->channels = 2;
+	// https://ffmpeg.org/doxygen/4.0/group__channel__mask__c.html
 	audio_encoder_codec_context->channel_layout = AV_CH_LAYOUT_STEREO;
 
 	if (out_format_context->oformat->flags & AVFMT_GLOBALHEADER)
@@ -262,23 +274,29 @@ void UFFmpegDirector::Create_Audio_Encoder(const char* audioencoder_name)
 	audio_encoder_codec_context->codec_tag = 0;
 	out_audio_stream->codecpar->codec_tag = 0;
 
+	// Initialize the AVCodecContext to use the given AVCodec
 	if (avcodec_open2(audio_encoder_codec_context, audioencoder_codec, NULL) < 0)
 	{
 		check(false);
 	}
+	// Fill the parameters struct based on the values from the supplied codec context
 	avcodec_parameters_from_context(out_audio_stream->codecpar, audio_encoder_codec_context);
 
+	// Allocate an AVFrame and set its fields to default values
 	audio_frame = av_frame_alloc();
+	// Set AVFrame fields
 	audio_frame->nb_samples = audio_encoder_codec_context->frame_size;
 	audio_frame->format = audio_encoder_codec_context->sample_fmt;
 }
 
-void UFFmpegDirector::Create_Video_Encoder(bool is_use_NGPU, const char* out_file_name, int bit_rate)
+// Create video encoder
+void UFFmpegDirector::Create_Video_Encoder(bool UseGPU, const char* out_file_name, int bit_rate)
 {
 	AVCodec *encoder_codec;
 	int ret;
 
-	if (is_use_NGPU)
+	// When GPU is to be used
+	if (UseGPU)
 	{
 		encoder_codec = avcodec_find_encoder_by_name("h264_nvenc");
 	}
@@ -386,6 +404,7 @@ void UFFmpegDirector::Video_Frame_YUV_From_BGR(uint8_t *rgb)
 	video_frame->format = AV_PIX_FMT_YUV420P;
 }
 
+// Audio resampling functionality
 void UFFmpegDirector::Create_Audio_Swr()
 {
 	swr = swr_alloc();
@@ -458,7 +477,7 @@ void UFFmpegDirector::Encode_Video_Frame(uint8_t *rgb)
 			*(buff_bgr + 1) = (EncodedPixel >> 12) & 0xFF;
 			*(buff_bgr) = (EncodedPixel >> 22) & 0xFF;
 			buff_bgr += 3;
-			++PixelPtr;		
+			++PixelPtr;
 		}
 		TextureDataPtr += LolStride;
 	}
@@ -507,7 +526,7 @@ void UFFmpegDirector::Encode_Video_Frame(uint8_t *rgb)
 			av_packet_unref(video_pkt);
 		}
 	}
-	av_frame_unref(filt_frame);	
+	av_frame_unref(filt_frame);
 }
 
 void UFFmpegDirector::Encode_SetCurrentAudioTime(uint8_t* rgb)

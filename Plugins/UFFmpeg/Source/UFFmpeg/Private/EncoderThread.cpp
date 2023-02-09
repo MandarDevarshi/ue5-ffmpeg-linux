@@ -54,7 +54,7 @@ void FEncoderThread::Exit()
 	
 }
 
-void FEncoderThread::CreateQueue(int video_data_size, int auido_data_size, int video_data_num, int auido_data_num)
+void FEncoderThread::CreateQueue(int video_data_size, int audio_data_size, int video_data_num, int audio_data_num)
 {
 	videobuffer_queue = NewObject<UCircleQueue>();
 	videobuffer_queue->AddToRoot();
@@ -63,12 +63,12 @@ void FEncoderThread::CreateQueue(int video_data_size, int auido_data_size, int v
 
 	audio_queue = NewObject<UCircleQueue>();
 	audio_queue->AddToRoot();
-	audio_queue->Init(auido_data_num, auido_data_size);
+	audio_queue->Init(audio_data_num, audio_data_size);
 
 
 	audio_time_queue = NewObject<UCircleQueue>();
 	audio_time_queue->AddToRoot();
-	audio_time_queue->Init(auido_data_num, auido_data_num*sizeof(double));
+	audio_time_queue->Init(audio_data_num, audio_data_num*sizeof(double));
 }
 
 EncodeDelegate& FEncoderThread::GetAudioProcessDelegate()
@@ -81,30 +81,30 @@ EncodeDelegate& FEncoderThread::GetAudioTimeProcessDelegate()
 	return audio_time_queue->encode_delegate;
 }
 
-bool FEncoderThread::InsertVideo(uint8* Src)
+bool FEncoderThread::InsertVideo(uint8* src)
 {
 	if (!videobuffer_queue)
 		return false;
 	{
 		FScopeLock ScopeLock(&VideoBufferMutex);		
-		while (!videobuffer_queue->InsertEncodeData(Src))
+		while (!videobuffer_queue->InsertEncodeData(src))
 		{
 			//GEngine->AddOnScreenDebugMessage(-1, 0.02f, FColor::Red, FString("video  now  encode"));
-			videobuffer_queue->PrcessEncodeData();
+			videobuffer_queue->ProcessEncodeData();
 			EncodeVideo();
 		}
 	}		
 	return true;
 }
 
-bool FEncoderThread::InsertAudio(uint8* Src, uint8* time)
+bool FEncoderThread::InsertAudio(uint8* src, uint8* time)
 {
 	if (!audio_queue)
 		return false;
 	{
 		FScopeLock ScopeLock(&AudioMutex);
 
-		while (!audio_queue->InsertEncodeData(Src) || !audio_time_queue->InsertEncodeData(time))
+		while (!audio_queue->InsertEncodeData(src) || !audio_time_queue->InsertEncodeData(time))
 		{
 			//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString("audio  now  encode"));
 			EncodeAudio();
@@ -129,7 +129,7 @@ void FEncoderThread::RunEncode()
 
 	{
 		FScopeLock ScopeLock1(&VideoBufferMutex);
-		IsNeedEncode = videobuffer_queue->PrcessEncodeData();
+		IsNeedEncode = videobuffer_queue->ProcessEncodeData();
 
 		if (IsNeedEncode)
 		{
@@ -152,7 +152,7 @@ void FEncoderThread::EncodeAudio()
 {
 	if (audio_queue)
 	{
-		audio_time_queue->PrcessEncodeData();
-		audio_queue->PrcessEncodeData();
+		audio_time_queue->ProcessEncodeData();
+		audio_queue->ProcessEncodeData();
 	}
 }

@@ -20,9 +20,9 @@ void FEncodeData::InitializeData(int size)
 	datasize = size;
 }
 
-void FEncodeData::SetEncodeData(uint8* Src)
+void FEncodeData::SetEncodeData(uint8* src)
 {	
-	FMemory::StreamingMemcpy(DataMemory, Src, datasize);	
+	FMemory::StreamingMemcpy(DataMemory, src, datasize);	
 }
 
 uint8* FEncodeData::GetData()
@@ -55,17 +55,17 @@ void UCircleQueue::Init(int queue_len, int data_sized)
 	}
 }
 
-bool UCircleQueue::InsertEncodeData(uint8* Src)
+bool UCircleQueue::InsertEncodeData(uint8* src)
 {
 	if (IsFull())
 		return false;
-	queue_ptr[queue_tail].SetEncodeData(Src);
+	queue_ptr[queue_tail].SetEncodeData(src);
 	--queue_freenum;
 	queue_tail = (queue_tail + 1) % queue_num;
 	return true;
 }
 
-bool UCircleQueue::PrcessEncodeData()
+bool UCircleQueue::ProcessEncodeData()
 {
 	if (IsEmpty())
 		return false;
