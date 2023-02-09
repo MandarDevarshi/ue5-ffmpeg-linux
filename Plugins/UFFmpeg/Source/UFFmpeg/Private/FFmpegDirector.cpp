@@ -3,19 +3,19 @@
 #include "EncoderThread.h"
 #include "EncodeData.h"
 
-#include "Engine/GameViewportClient.h"
-#include "Slate/SceneViewport.h"
-#include "Framework/Application/SlateApplication.h"
-#include "Logging/LogVerbosity.h"
 #include "Containers/Ticker.h"
 #include "Editor.h"
+#include "Engine/GameViewportClient.h"
 #include "Engine/World.h"
+#include "Framework/Application/SlateApplication.h"
+#include "GameDelegates.h"
 #include "HAL/FileManager.h"
+#include "Logging/LogVerbosity.h"
+#include "Misc/CoreDelegates.h"
 #include "Misc/FileHelper.h"
 #include "RenderingThread.h"
 #include "RHI.h"
-#include "Misc/CoreDelegates.h"
-#include "GameDelegates.h"
+#include "Slate/SceneViewport.h"
 
 
 UFFmpegDirector::UFFmpegDirector() :
@@ -236,7 +236,7 @@ void UFFmpegDirector::GetScreenVideoData()
 void UFFmpegDirector::CreateEncodeThread()
 {
 	Runnable = new FEncoderThread();
-	Runnable->CreateQueue(4 * width*height, 2048 * sizeof(float), 30, 40);
+	Runnable->CreateQueue(4*width*height, 2048*sizeof(float), 30, 40);
 	Runnable->GetAudioProcessDelegate().BindUObject(this, &UFFmpegDirector::Encode_Audio_Frame);
 	Runnable->video_encode_delegate.BindUObject(this, &UFFmpegDirector::Encode_Video_Frame);
 	Runnable->GetAudioTimeProcessDelegate().BindUObject(this, &UFFmpegDirector::Encode_SetCurrentAudioTime);
@@ -248,7 +248,7 @@ void UFFmpegDirector::Create_Audio_Encoder(const char* audioencoder_name)
 {
 	AVCodec* audioencoder_codec;
 	audioencoder_codec = avcodec_find_encoder_by_name(audioencoder_name);
-	// Add a new stream to a media file
+	// Add a new stream to a media file AVStream
 	out_audio_stream = avformat_new_stream(out_format_context, audioencoder_codec);
 	audio_index = out_audio_stream->index;
 	// Allocate an AVCodecContext and set its fields to default
@@ -258,6 +258,7 @@ void UFFmpegDirector::Create_Audio_Encoder(const char* audioencoder_name)
 	{
 		check(false);
 	}
+
 	// Set AVCodecContext fields
 	audio_encoder_codec_context->codec_id = AV_CODEC_ID_AAC;
 	audio_encoder_codec_context->bit_rate = 120000;
@@ -279,6 +280,7 @@ void UFFmpegDirector::Create_Audio_Encoder(const char* audioencoder_name)
 	{
 		check(false);
 	}
+
 	// Fill the parameters struct based on the values from the supplied codec context
 	avcodec_parameters_from_context(out_audio_stream->codecpar, audio_encoder_codec_context);
 
@@ -293,30 +295,37 @@ void UFFmpegDirector::Create_Audio_Encoder(const char* audioencoder_name)
 void UFFmpegDirector::Create_Video_Encoder(bool UseGPU, const char* out_file_name, int bit_rate)
 {
 	AVCodec *encoder_codec;
-	int ret;
-
-	// When GPU is to be used
+	
+	// When use GPU is true
 	if (UseGPU)
 	{
+		// Find a registered encoder with the specified name
 		encoder_codec = avcodec_find_encoder_by_name("h264_nvenc");
 	}
 	else
-	{
+	{	
+		// Find a registered encoder with a matching codec ID
 		encoder_codec = avcodec_find_encoder(AV_CODEC_ID_H264);
 	}
 	if (!encoder_codec)
 	{
+		// If no encoder found
 		check(false);
 	}
+
+	// Add a new stream to media file AVStream
 	out_video_stream = avformat_new_stream(out_format_context, encoder_codec);
 
 	video_index = out_video_stream->index;
-
+	
+	// Allocate an AVCodecContext and set its fields to default values. 
 	video_encoder_codec_context = avcodec_alloc_context3(encoder_codec);
+	
 	if (!video_encoder_codec_context)
 	{
 		check(false);
 	}
+
 	video_encoder_codec_context->bit_rate = bit_rate;
 	//video_encoder_codec_context->rc_min_rate = bit_rate;
 	//video_encoder_codec_context->rc_max_rate = bit_rate;
@@ -344,53 +353,53 @@ void UFFmpegDirector::Create_Video_Encoder(bool UseGPU, const char* out_file_nam
 
 	//ultrafast,superfast, veryfast, faster, fast, medium, slow, slower, veryslow,placebo.
 	if (encoder_codec)
-		av_opt_set(video_encoder_codec_context->priv_data, "preset", "fast",
-			0);
+		av_opt_set(video_encoder_codec_context->priv_data, "preset", "fast", 0);
 
 	if (out_format_context->oformat->flags & AVFMT_GLOBALHEADER)
 		video_encoder_codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
-	int i = avcodec_open2(video_encoder_codec_context, encoder_codec, NULL);
-	if (i < 0)
+	// Initialize the AVCodecContext to use the given AVCodec
+	if (avcodec_open2(video_encoder_codec_context, encoder_codec, NULL) < 0)
 	{
 		check(false);
 	}
 
-	ret = avcodec_parameters_from_context(out_video_stream->codecpar, video_encoder_codec_context);
-	if (ret < 0)
+	// Fill the parameters struct based on the values from the supplied codec context
+	if (avcodec_parameters_from_context(out_video_stream->codecpar, video_encoder_codec_context) < 0)
 	{
 		check(false);
 	}
 
+	// Allocate an AVFrame and set its fields to default values 
 	video_frame = av_frame_alloc();
+	
 	if (!video_frame)
 	{
 		check(false);
 	}
 
+	// Create and initialize a AVIOContext for accessing the resource indicated by url 
 	avio_open(&out_format_context->pb, out_file_name, AVIO_FLAG_WRITE);
-	ret = av_image_alloc(
-		video_frame->data,
-		video_frame->linesize,
-		out_width,
-		out_height,
-		video_encoder_codec_context->pix_fmt,
-		32);
-	if (ret < 0)
+
+	// Allocate an image with size w and h and pixel format pix_fmt, and fill pointers and linesizes accordingly 
+	if (av_image_alloc(video_frame->data, video_frame->linesize, out_width,out_height, video_encoder_codec_context->pix_fmt, 32) < 0)
 	{
 		check(false);
 	}
 
+	// Check if context can be reused, otherwise reallocate a new one
+	// TODO: See if the values 0,0,0 passed to SwsFilter and const double * param are correct 
 	sws_context = sws_getCachedContext(sws_context,
 		width, height, AV_PIX_FMT_BGR24,
 		out_width, out_height, AV_PIX_FMT_YUV420P,
 		SWS_FAST_BILINEAR, 0, 0, 0);
 
+	// Allocate the stream private data and write the stream header to an output media file. 
 	if (avformat_write_header(out_format_context, NULL) < 0)
 	{
 		check(false);
 	}
-
+	// time_base: This is the fundamental unit of time (in seconds) in terms of which frame timestamps are represented. 
 	Video_Frame_Duration = out_video_stream->time_base.den / video_fps;
 }
 
@@ -423,6 +432,7 @@ void UFFmpegDirector::OnNewSubmixBuffer(const USoundSubmix* OwningSubmix, float*
 		Runnable->InsertAudio((uint8_t*)AudioData, (uint8_t*)&AudioClock);
 }
 
+// To encode audio frame
 void UFFmpegDirector::Encode_Audio_Frame(uint8_t *rgb)
 {
 	const uint8_t* data = rgb;
@@ -442,7 +452,7 @@ void UFFmpegDirector::Encode_Audio_Frame(uint8_t *rgb)
 	if (got_output)
 	{
 		audio_pkt->pts = audio_pkt->dts = av_rescale_q(
-			(CurrentAuidoTime + audio_delay) / av_q2d({ 1,48000 }),
+			(CurrentAudioTime + audio_delay) / av_q2d({ 1,48000 }),
 			{ 1,48000 },
 			out_audio_stream->time_base);
 
@@ -457,6 +467,7 @@ void UFFmpegDirector::Encode_Audio_Frame(uint8_t *rgb)
 	}
 }
 
+// To encode video frame
 void UFFmpegDirector::Encode_Video_Frame(uint8_t *rgb)
 {
 	uint32 Row = 0;
@@ -531,7 +542,7 @@ void UFFmpegDirector::Encode_Video_Frame(uint8_t *rgb)
 
 void UFFmpegDirector::Encode_SetCurrentAudioTime(uint8_t* rgb)
 {
-	CurrentAuidoTime = *(double*)rgb;
+	CurrentAudioTime = *(double*)rgb;
 }
 
 void UFFmpegDirector::Set_Audio_Volume(AVFrame *frame)
@@ -548,7 +559,9 @@ void UFFmpegDirector::Set_Audio_Volume(AVFrame *frame)
 
 void UFFmpegDirector::Alloc_Video_Filter()
 {
+	// Allocate a single AVFilterInOut entry
 	outputs = avfilter_inout_alloc();
+	// Allocate a single AVFilterInOut entry
 	inputs = avfilter_inout_alloc();
 	const AVFilter *buffersrc = avfilter_get_by_name("buffer");
 	const AVFilter *buffersink = avfilter_get_by_name("buffersink");

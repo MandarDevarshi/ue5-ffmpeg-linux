@@ -9,22 +9,20 @@
 #include "Containers/Ticker.h"
 extern "C"
 {
-#include "libavformat/avformat.h"
 #include "libavcodec/avcodec.h"
-#include "libavutil/mem.h"
-#include "libswscale/swscale.h"
-#include "libavutil/file.h"
-#include "libavutil/imgutils.h"
-#include "libavutil/opt.h"
-#include "libavcodec/avcodec.h"
-#include "libavformat/avformat.h"
 #include "libavfilter/buffersink.h"
 #include "libavfilter/buffersrc.h"
-#include "libavutil/opt.h"
+#include "libavformat/avformat.h"
 #include "libavutil/avutil.h"
-#include "libavutil/time.h"
 #include "libavutil/error.h"
+#include "libavutil/file.h"
+#include "libavutil/imgutils.h"
+#include "libavutil/mem.h"
+#include "libavutil/opt.h"
+#include "libavutil/opt.h"
+#include "libavutil/time.h"
 #include "libswresample/swresample.h"
+#include "libswscale/swscale.h"
 }
 #include "FFmpegDirector.generated.h"
 
@@ -83,7 +81,7 @@ private:
 	int video_fps;
 	uint32 Video_Frame_Duration;
 	float Video_Tick_Time;
-	double CurrentAuidoTime = 0.0;
+	double CurrentAudioTime = 0.0;
 	float audio_delay;
 	float audio_volume;
 	uint32 width;
